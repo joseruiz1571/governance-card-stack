@@ -1,0 +1,213 @@
+{
+  "spec_version": "0.1.0",
+  "card_type": "agent",
+  "metadata": {
+    "uuid": "a1f5c2d4-9b3e-4c7a-8e21-6d884bb7b280",
+    "name": "acme-dispute-triage-agent",
+    "display_name": "Acme Bank Dispute Triage Agent",
+    "version": "1.4.0",
+    "description": "Reviews incoming card-transaction disputes, classifies them, issues provisional credit for low-value cases, and escalates everything above threshold or flagged for fraud to a human analyst.",
+    "created": "2026-05-18T14:32:00Z",
+    "last_modified": "2026-06-02T09:15:00Z",
+    "owners": [
+      { "role": "business", "name": "Dana Okafor", "contact": "fraud-ops@acmebank.example" },
+      { "role": "technical", "name": "Acme ML Platform Team", "contact": "ml-platform@acmebank.example" }
+    ],
+    "lifecycle_status": "active",
+    "links": [
+      { "rel": "system-card", "href": "https://cards.acmebank.example/systems/dispute-platform.card.json", "media_type": "application/json" },
+      { "rel": "a2a-capability-card", "href": "https://agents.acmebank.example/dispute-triage/.well-known/agent-card.json", "media_type": "application/json" },
+      { "rel": "repository", "href": "https://github.com/acmebank/dispute-triage-agent" },
+      { "rel": "runbook", "href": "https://runbooks.acmebank.example/dispute-triage" }
+    ]
+  },
+  "classification": {
+    "risk_tier": "high",
+    "data_classification": "confidential",
+    "deployment_environment": "prod",
+    "review_cadence_days": 90,
+    "next_review": "2026-09-01"
+  },
+  "autonomy": {
+    "autonomy_level": "delegated",
+    "human_oversight": "human_on_the_loop",
+    "reversibility": "reversible_with_effort"
+  },
+  "models": [
+    {
+      "uuid": "3c9d7e2a-1b4f-4a8c-b2e3-5a1c9f0e7d11",
+      "href": "https://cards.acmebank.example/models/intent-classifier-v3.card.json",
+      "name": "dispute-intent-classifier-v3"
+    }
+  ],
+  "tools": [
+    {
+      "tool_id": "txn-read",
+      "name": "Transaction lookup",
+      "description": "Read transaction history for an account tied to an open dispute.",
+      "data_access": "read",
+      "permission_scope": "Accounts with an open dispute case only; 90-day transaction window.",
+      "requires_approval": false,
+      "reversibility": "reversible"
+    },
+    {
+      "tool_id": "profile-read",
+      "name": "Customer profile lookup",
+      "description": "Read customer profile fields needed to verify dispute eligibility.",
+      "data_access": "read",
+      "permission_scope": "Disputing customer only; excludes SSN and full PAN.",
+      "requires_approval": false,
+      "reversibility": "reversible"
+    },
+    {
+      "tool_id": "provisional-credit",
+      "name": "Issue provisional credit",
+      "description": "Post a provisional credit to the disputing account pending investigation.",
+      "data_access": "write",
+      "permission_scope": "Single account; amount governed by the credit-limit decision boundary.",
+      "requires_approval": true,
+      "reversibility": "reversible_with_effort",
+      "rate_limit": "20 per hour",
+      "threat_refs": ["AML.T0051", "AML.T0110"]
+    },
+    {
+      "tool_id": "case-open",
+      "name": "Open case in case-management system",
+      "description": "Create or update a dispute case record for human follow-up.",
+      "data_access": "write",
+      "permission_scope": "Dispute case queue only.",
+      "requires_approval": false,
+      "reversibility": "reversible"
+    }
+  ],
+  "decision_boundaries": [
+    {
+      "id": "credit-limit",
+      "type": "limit",
+      "description": "Provisional credit may be issued autonomously only up to $500. Above that, approval is required.",
+      "threshold": "$500",
+      "on_breach": "escalate"
+    },
+    {
+      "id": "account-scope",
+      "type": "deny",
+      "description": "The agent may not read or write any account that is not tied to an open dispute it is handling.",
+      "on_breach": "block"
+    },
+    {
+      "id": "no-pii-export",
+      "type": "deny",
+      "description": "The agent may not transmit customer PII to any destination outside the dispute-platform trust boundary.",
+      "on_breach": "halt"
+    },
+    {
+      "id": "confidence-floor",
+      "type": "limit",
+      "description": "Disputes classified with confidence below 0.70 must be routed to a human rather than auto-resolved.",
+      "threshold": "confidence < 0.70",
+      "on_breach": "escalate"
+    }
+  ],
+  "escalation": {
+    "triggers": [
+      { "condition": "Provisional credit amount exceeds $500", "action": "require_approval", "target": "fraud_analyst_queue", "sla": "4 business hours" },
+      { "condition": "Transaction carries a fraud flag", "action": "escalate_to_human", "target": "fraud_analyst_queue", "sla": "1 business hour" },
+      { "condition": "Classification confidence below 0.70", "action": "escalate_to_human", "target": "dispute_analyst_queue", "sla": "1 business day" }
+    ],
+    "kill_switch": {
+      "available": true,
+      "mechanism": "Feature flag agent.dispute_triage.enabled = false (LaunchDarkly); halts all autonomous action within 60s.",
+      "owner": "ML Platform on-call"
+    }
+  },
+  "governance": {
+    "frameworks": ["NIST AI RMF 1.0", "ISO/IEC 42001:2023", "Federal Reserve SR 11-7"],
+    "control_mappings": [
+      {
+        "control_id": "MAP 1.1",
+        "framework": "NIST AI RMF 1.0",
+        "statement": "Intended purpose, scope, and prohibited uses are documented in this Card and the linked System Card.",
+        "status": "implemented",
+        "evidence_refs": ["7b2c9e14-3a6d-4f81-9c0a-2e78a1b4c0d3"]
+      },
+      {
+        "control_id": "MANAGE 2.3",
+        "framework": "NIST AI RMF 1.0",
+        "statement": "Decision boundaries, escalation triggers, and a kill switch provide bounded, monitorable risk response in production.",
+        "status": "implemented",
+        "evidence_refs": ["7b2c9e14-3a6d-4f81-9c0a-2e78a1b4c0d3"]
+      },
+      {
+        "control_id": "8.3",
+        "framework": "ISO/IEC 42001:2023",
+        "statement": "AI risk treatment for the agent is implemented via tool-scope limits and human-on-the-loop oversight; treatments are reviewed every 90 days.",
+        "status": "partial"
+      },
+      {
+        "control_id": "Ongoing Monitoring",
+        "framework": "Federal Reserve SR 11-7",
+        "statement": "Risk-tiered review cadence (90 days at HIGH) plus continuous evidence capture satisfies ongoing model-risk monitoring expectations.",
+        "status": "implemented",
+        "evidence_refs": ["7b2c9e14-3a6d-4f81-9c0a-2e78a1b4c0d3"]
+      }
+    ],
+    "threat_mappings": [
+      {
+        "threat_id": "AML.T0051",
+        "taxonomy": "mitre-atlas",
+        "name": "LLM Prompt Injection",
+        "description": "Adversarial content in a dispute narrative attempts to redirect the agent into unauthorized actions.",
+        "mitigated_by": ["account-scope", "credit-limit", "no-pii-export"]
+      },
+      {
+        "threat_id": "AML.T0110",
+        "taxonomy": "mitre-atlas",
+        "name": "AI Agent Tool Poisoning",
+        "description": "A compromised or substituted tool causes the agent to take attacker-controlled actions.",
+        "mitigated_by": ["8.3"]
+      },
+      {
+        "threat_id": "LLM06",
+        "taxonomy": "owasp-llm",
+        "name": "Excessive Agency",
+        "description": "The agent acts beyond intended authority due to over-broad tool grants or autonomy.",
+        "mitigated_by": ["credit-limit", "confidence-floor", "MANAGE 2.3"]
+      }
+    ]
+  },
+  "evidence": [
+    {
+      "uuid": "7b2c9e14-3a6d-4f81-9c0a-2e78a1b4c0d3",
+      "description": "CI evidence bundle from grc-gate run #142 (Terraform plan, Conftest results, tfsec).",
+      "href": "s3://acme-evidence-vault/agents/dispute-triage/runs/142/evidence-bundle.tar.gz",
+      "media_type": "application/x-tar",
+      "collected_at": "2026-06-02T09:14:50Z",
+      "hash": {
+        "algorithm": "sha-256",
+        "value": "9f2c1a7d4e6b8c0a3f5d2e1b7c9a0d4f6e8b2c1a3d5f7e9b0c2a4d6f8e1b3c5d"
+      },
+      "signature": {
+        "type": "cosign-keyless",
+        "issuer": "https://token.actions.githubusercontent.com",
+        "identity": "https://github.com/acmebank/dispute-triage-agent/.github/workflows/grc-gate.yml@refs/heads/main",
+        "bundle_href": "s3://acme-evidence-vault/agents/dispute-triage/runs/142/evidence-bundle.bundle.json"
+      },
+      "retention_until": "2027-06-02T09:14:50Z"
+    }
+  ],
+  "attestation": {
+    "generated_by": "mltrack 0.7.0 (card export)",
+    "generated_at": "2026-06-02T09:15:00Z",
+    "canonicalization": "RFC8785-JCS",
+    "signature": {
+      "type": "cosign-keyless",
+      "issuer": "https://token.actions.githubusercontent.com",
+      "identity": "https://github.com/acmebank/dispute-triage-agent/.github/workflows/card-publish.yml@refs/heads/main",
+      "bundle_href": "s3://acme-evidence-vault/agents/dispute-triage/cards/a1f5c2d4.bundle.json"
+    }
+  },
+  "props": [
+    { "name": "business-line", "value": "Consumer Cards" },
+    { "name": "cri-profile", "value": "FS-AIRMF-tier-high", "ns": "https://controlledvocabulary.dev/ns/crosswalk" }
+  ]
+}

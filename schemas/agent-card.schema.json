@@ -1,0 +1,344 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/joseruiz1571/governance-card-stack/main/schemas/agent-card.schema.json",
+  "title": "Governance Agent Card",
+  "description": "An authority record for an autonomous AI system: a machine-readable description of what an agent is permitted to do, the governance that constrains it, and the evidence that backs it. Part of the Governance Card Stack. This is an assurance descriptor, distinct from (and complementary to) an A2A capability Agent Card.",
+  "type": "object",
+  "required": ["spec_version", "card_type", "metadata", "classification", "autonomy", "governance"],
+  "additionalProperties": false,
+  "properties": {
+    "spec_version": {
+      "description": "Version of the Governance Card Stack spec this Card conforms to.",
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "card_type": {
+      "description": "Discriminator for the card kind. Always 'agent' for an Agent Card.",
+      "const": "agent"
+    },
+    "metadata": { "$ref": "#/$defs/metadata" },
+    "classification": { "$ref": "#/$defs/classification" },
+    "autonomy": { "$ref": "#/$defs/autonomy" },
+    "tools": {
+      "description": "Tools and actions the agent is granted, with their scope and risk properties.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/toolGrant" }
+    },
+    "decision_boundaries": {
+      "description": "Explicit constraints on agent behavior, with a defined response on breach.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/decisionBoundary" }
+    },
+    "escalation": { "$ref": "#/$defs/escalation" },
+    "models": {
+      "description": "References to the Model Card(s) of model(s) this agent uses.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/reference" }
+    },
+    "governance": { "$ref": "#/$defs/governance" },
+    "evidence": {
+      "description": "Signed, hashed, retained artifacts that the Card's assertions resolve to.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/evidenceItem" }
+    },
+    "attestation": { "$ref": "#/$defs/attestation" },
+    "props": {
+      "description": "Open extension point for cross-framework annotation (OSCAL-style name/value props).",
+      "type": "array",
+      "items": { "$ref": "#/$defs/prop" }
+    }
+  },
+
+  "$defs": {
+    "uuid": {
+      "description": "A v4 UUID (RFC 4122), mirroring OSCAL's identifier constraint.",
+      "type": "string",
+      "pattern": "^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}$"
+    },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "date": { "type": "string", "format": "date" },
+
+    "prop": {
+      "type": "object",
+      "required": ["name", "value"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "value": { "type": "string" },
+        "ns": { "type": "string", "format": "uri", "description": "Namespace that disambiguates the prop name." },
+        "class": { "type": "string" }
+      }
+    },
+
+    "link": {
+      "type": "object",
+      "required": ["rel", "href"],
+      "additionalProperties": false,
+      "properties": {
+        "rel": {
+          "description": "Relationship of the linked resource to this Card (e.g., system-card, a2a-capability-card, repository, runbook).",
+          "type": "string"
+        },
+        "href": { "type": "string" },
+        "media_type": { "type": "string" }
+      }
+    },
+
+    "reference": {
+      "description": "A pointer to another Card or governed artifact, by UUID and/or href.",
+      "type": "object",
+      "anyOf": [{ "required": ["uuid"] }, { "required": ["href"] }],
+      "additionalProperties": false,
+      "properties": {
+        "uuid": { "$ref": "#/$defs/uuid" },
+        "href": { "type": "string" },
+        "name": { "type": "string" }
+      }
+    },
+
+    "owner": {
+      "type": "object",
+      "required": ["role", "name"],
+      "additionalProperties": false,
+      "properties": {
+        "role": { "type": "string", "enum": ["business", "technical", "accountable", "security", "privacy"] },
+        "name": { "type": "string" },
+        "contact": { "type": "string" }
+      }
+    },
+
+    "metadata": {
+      "type": "object",
+      "required": ["uuid", "name", "version", "owners", "lifecycle_status", "last_modified"],
+      "additionalProperties": false,
+      "properties": {
+        "uuid": { "$ref": "#/$defs/uuid" },
+        "name": { "description": "Stable machine name (the authority heading) for the agent.", "type": "string" },
+        "display_name": { "type": "string" },
+        "version": { "description": "Version of the agent itself.", "type": "string" },
+        "description": { "type": "string" },
+        "created": { "$ref": "#/$defs/timestamp" },
+        "last_modified": { "$ref": "#/$defs/timestamp" },
+        "owners": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/owner" } },
+        "lifecycle_status": { "type": "string", "enum": ["proposed", "active", "deprecated", "retired"] },
+        "links": { "type": "array", "items": { "$ref": "#/$defs/link" } }
+      }
+    },
+
+    "classification": {
+      "type": "object",
+      "required": ["risk_tier"],
+      "additionalProperties": false,
+      "properties": {
+        "risk_tier": { "type": "string", "enum": ["critical", "high", "medium", "low"] },
+        "data_classification": { "type": "string", "enum": ["public", "internal", "confidential", "restricted"] },
+        "deployment_environment": { "type": "string", "enum": ["prod", "staging", "dev"] },
+        "review_cadence_days": {
+          "description": "Required governance review interval, typically driven by risk_tier (e.g., 30 / 90 / 180 / 365).",
+          "type": "integer",
+          "minimum": 1
+        },
+        "next_review": { "$ref": "#/$defs/date" }
+      }
+    },
+
+    "autonomy": {
+      "type": "object",
+      "required": ["autonomy_level", "human_oversight"],
+      "additionalProperties": false,
+      "properties": {
+        "autonomy_level": {
+          "description": "How independently the agent acts. assistive: proposes, human executes. supervised: acts only with per-action human approval. delegated: acts within bounds, human on-the-loop and able to intervene. autonomous_bounded: acts independently inside hard constraints, escalates out-of-bounds. autonomous: acts with minimal constraints (high scrutiny).",
+          "type": "string",
+          "enum": ["assistive", "supervised", "delegated", "autonomous_bounded", "autonomous"]
+        },
+        "human_oversight": {
+          "type": "string",
+          "enum": ["human_in_the_loop", "human_on_the_loop", "human_out_of_the_loop"]
+        },
+        "reversibility": {
+          "description": "Default reversibility of the agent's actions.",
+          "type": "string",
+          "enum": ["reversible", "reversible_with_effort", "irreversible"]
+        }
+      }
+    },
+
+    "toolGrant": {
+      "type": "object",
+      "required": ["tool_id", "name", "data_access"],
+      "additionalProperties": false,
+      "properties": {
+        "tool_id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "data_access": { "type": "string", "enum": ["none", "read", "write", "read_write"] },
+        "permission_scope": { "description": "What the grant is limited to (accounts, datasets, dollar amounts, environments).", "type": "string" },
+        "requires_approval": { "type": "boolean" },
+        "reversibility": { "type": "string", "enum": ["reversible", "reversible_with_effort", "irreversible"] },
+        "rate_limit": { "type": "string" },
+        "threat_refs": {
+          "description": "IDs of threats in governance.threat_mappings this tool is exposed to.",
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+
+    "decisionBoundary": {
+      "type": "object",
+      "required": ["id", "type", "description", "on_breach"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string", "enum": ["allow", "deny", "limit"] },
+        "description": { "type": "string" },
+        "threshold": { "description": "Numeric or symbolic threshold for a 'limit' boundary (e.g., '$500', 'confidence < 0.7').", "type": "string" },
+        "on_breach": { "type": "string", "enum": ["block", "escalate", "halt", "log"] }
+      }
+    },
+
+    "escalation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "triggers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["condition", "action"],
+            "additionalProperties": false,
+            "properties": {
+              "condition": { "type": "string" },
+              "action": { "type": "string", "enum": ["escalate_to_human", "halt", "rollback", "require_approval"] },
+              "target": { "description": "Role or queue the escalation routes to.", "type": "string" },
+              "sla": { "type": "string" }
+            }
+          }
+        },
+        "kill_switch": {
+          "type": "object",
+          "required": ["available"],
+          "additionalProperties": false,
+          "properties": {
+            "available": { "type": "boolean" },
+            "mechanism": { "type": "string" },
+            "owner": { "type": "string" }
+          }
+        }
+      }
+    },
+
+    "governance": {
+      "type": "object",
+      "required": ["frameworks", "control_mappings"],
+      "additionalProperties": false,
+      "properties": {
+        "frameworks": {
+          "description": "Declared control frameworks this agent is governed against.",
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" }
+        },
+        "control_mappings": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/controlMapping" }
+        },
+        "threat_mappings": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/threatMapping" }
+        }
+      }
+    },
+
+    "controlMapping": {
+      "type": "object",
+      "required": ["control_id", "framework", "status"],
+      "additionalProperties": false,
+      "properties": {
+        "control_id": { "type": "string" },
+        "framework": { "type": "string" },
+        "statement": { "description": "How this agent satisfies the control.", "type": "string" },
+        "status": { "type": "string", "enum": ["implemented", "partial", "planned", "not_applicable"] },
+        "evidence_refs": {
+          "description": "UUIDs of evidence[] items that substantiate this control.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/uuid" }
+        }
+      }
+    },
+
+    "threatMapping": {
+      "type": "object",
+      "required": ["threat_id", "taxonomy"],
+      "additionalProperties": false,
+      "properties": {
+        "threat_id": { "description": "Threat identifier within the taxonomy (e.g., AML.T0051, LLM06).", "type": "string" },
+        "taxonomy": { "type": "string", "enum": ["mitre-atlas", "owasp-llm", "owasp-agentic", "other"] },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "mitigated_by": {
+          "description": "control_id or decision_boundary id values that mitigate this threat — the crosswalk.",
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+
+    "evidenceItem": {
+      "type": "object",
+      "required": ["uuid", "description", "href", "collected_at"],
+      "additionalProperties": false,
+      "properties": {
+        "uuid": { "$ref": "#/$defs/uuid" },
+        "description": { "type": "string" },
+        "href": { "type": "string" },
+        "media_type": { "type": "string" },
+        "collected_at": { "$ref": "#/$defs/timestamp" },
+        "hash": {
+          "type": "object",
+          "required": ["algorithm", "value"],
+          "additionalProperties": false,
+          "properties": {
+            "algorithm": { "type": "string", "enum": ["sha-256", "sha-512"] },
+            "value": { "type": "string", "pattern": "^[0-9a-fA-F]+$" }
+          }
+        },
+        "signature": {
+          "type": "object",
+          "required": ["type"],
+          "additionalProperties": false,
+          "properties": {
+            "type": { "type": "string", "enum": ["cosign-keyless", "cosign-key", "pgp", "x509"] },
+            "issuer": { "type": "string" },
+            "identity": { "type": "string" },
+            "bundle_href": { "type": "string" }
+          }
+        },
+        "retention_until": { "$ref": "#/$defs/timestamp" }
+      }
+    },
+
+    "attestation": {
+      "description": "Provenance of this Card and, optionally, a signature over the Card itself.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "generated_by": { "description": "Tool that produced the Card (e.g., 'mltrack 0.7.0').", "type": "string" },
+        "generated_at": { "$ref": "#/$defs/timestamp" },
+        "canonicalization": { "description": "Canonicalization applied before signing (e.g., RFC8785-JCS).", "type": "string" },
+        "signature": {
+          "type": "object",
+          "required": ["type"],
+          "additionalProperties": false,
+          "properties": {
+            "type": { "type": "string", "enum": ["cosign-keyless", "cosign-key", "pgp", "x509"] },
+            "issuer": { "type": "string" },
+            "identity": { "type": "string" },
+            "bundle_href": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}
