@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/joseruiz1571/governance-card-stack/main/schemas/system-card.schema.json",
+  "title": "Governance System Card (stub)",
+  "description": "STUB — v0.1.0. Describes the system around a model: components, data flows, safeguards, and human roles. Shares the Governance Card Stack envelope with the Agent Card; the system-specific fields and the shared metadata/governance/evidence defs (to be extracted into card-base.schema.json) will be expanded in a later release.",
+  "type": "object",
+  "required": ["spec_version", "card_type", "metadata", "system"],
+  "additionalProperties": false,
+  "properties": {
+    "spec_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "card_type": { "const": "system" },
+    "metadata": {
+      "type": "object",
+      "required": ["uuid", "name", "version"],
+      "properties": {
+        "uuid": { "type": "string", "pattern": "^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}$" },
+        "name": { "type": "string" },
+        "version": { "type": "string" },
+        "description": { "type": "string" },
+        "owners": { "type": "array" },
+        "lifecycle_status": { "type": "string", "enum": ["proposed", "active", "deprecated", "retired"] }
+      }
+    },
+    "classification": { "type": "object" },
+    "system": {
+      "description": "System-specific descriptor (stub).",
+      "type": "object",
+      "required": ["description"],
+      "properties": {
+        "description": { "type": "string" },
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "type": { "type": "string" },
+              "description": { "type": "string" }
+            }
+          }
+        },
+        "data_flows": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "from": { "type": "string" },
+              "to": { "type": "string" },
+              "data_classification": { "type": "string", "enum": ["public", "internal", "confidential", "restricted"] }
+            }
+          }
+        },
+        "safeguards": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "description": { "type": "string" },
+              "control_refs": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        },
+        "human_roles": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "role": { "type": "string" },
+              "responsibility": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "agents": {
+      "description": "References to Agent Cards operating within this system.",
+      "type": "array"
+    },
+    "governance": { "type": "object" },
+    "evidence": { "type": "array" },
+    "attestation": { "type": "object" },
+    "props": { "type": "array" }
+  }
+}

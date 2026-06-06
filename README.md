@@ -24,8 +24,8 @@ Three claims hold the stack together:
 
 | Card | Describes | Status |
 |------|-----------|--------|
-| **Model Card** | What a model *is*: purpose, training, performance, limitations, evaluations. | planned |
-| **System Card** | The system *around* a model: data pipeline, deployment context, safeguards, human roles. | planned |
+| **Model Card** | What a model *is*: purpose, training, performance, limitations, evaluations. | stub |
+| **System Card** | The system *around* a model: data pipeline, deployment context, safeguards, human roles. | stub |
 | **Agent Card** | What an agent is *allowed to do*: autonomy, tool/permission scope, decision boundaries, oversight, and the controls + evidence that back them. | **v0.1.0** |
 
 The Agent Card ships first because it is the gap the field has not filled. Model Cards are well-established (Mitchell et al., 2019); System Cards less so; a *governance* Agent Card — an authority record for an autonomous system — barely exists yet.
@@ -39,13 +39,16 @@ governance-card-stack/
 ├── README.md                              # this file (the spec front door)
 ├── schemas/
 │   ├── agent-card.schema.json             # v0.1.0 — JSON Schema (draft 2020-12)
-│   ├── system-card.schema.json            # planned
-│   ├── model-card.schema.json             # planned
+│   ├── system-card.schema.json            # stub — card_type: "system"
+│   ├── model-card.schema.json             # stub — card_type: "model"
 │   └── card-base.schema.json              # planned — shared metadata/governance/evidence defs
 ├── examples/
 │   └── dispute-triage-agent.card.json     # worked Agent Card instance
+├── policies/
+│   ├── agent_card.rego                    # OPA/Conftest CI gate — governance lint (run after schema validation)
+│   └── agent_card_test.rego               # unit tests — `opa test policies/ -v`
 └── docs/
-    └── autonomy-levels.md                 # planned — the autonomy scale, expanded
+    └── autonomy-levels.md                 # normative reference for autonomy_level / human_oversight / reversibility
 ```
 
 ---
@@ -111,10 +114,10 @@ Note the v4-UUID constraint on identifiers, mirroring OSCAL — hand-written all
 
 - [x] **v0.1.0** — Agent Card schema + worked example
 - [ ] Extract `card-base.schema.json` (shared `metadata` / `governance` / `evidence` defs) and `$ref` it from all three cards
-- [ ] **Model Card** and **System Card** schemas
+- [x] **Model Card** and **System Card** schemas (stubs — full field expansion follows the `card-base` extraction)
 - [ ] `mltrack card export` / `mltrack card validate` — generate and check Cards from the inventory
-- [ ] A Conftest/OPA policy that fails a CI build when a changed agent ships without a valid, current Card (ties the stack to the capstone gate)
-- [ ] `docs/autonomy-levels.md` — the autonomy scale, with worked examples per level
+- [x] A Conftest/OPA policy that fails a CI build when a changed agent ships without a valid, current Card (ties the stack to the capstone gate)
+- [x] `docs/autonomy-levels.md` — the autonomy scale, with worked examples per level
 - [ ] Publish the spec at a stable URL and invite a first external adopter
 
 ---
