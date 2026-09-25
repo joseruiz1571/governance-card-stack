@@ -8,7 +8,7 @@
     "version": "1.4.0",
     "description": "Reviews incoming card-transaction disputes, classifies them, issues provisional credit for low-value cases, and escalates everything above threshold or flagged for fraud to a human analyst.",
     "created": "2026-05-18T14:32:00Z",
-    "last_modified": "2026-06-02T09:15:00Z",
+    "last_modified": "2026-09-25T00:00:00Z",
     "owners": [
       { "role": "business", "name": "Dana Okafor", "contact": "fraud-ops@acmebank.example" },
       { "role": "technical", "name": "Acme ML Platform Team", "contact": "ml-platform@acmebank.example" }
@@ -26,7 +26,7 @@
     "data_classification": "confidential",
     "deployment_environment": "prod",
     "review_cadence_days": 90,
-    "next_review": "2026-09-01"
+    "next_review": "2026-12-24"
   },
   "autonomy": {
     "autonomy_level": "delegated",

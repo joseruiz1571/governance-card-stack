@@ -1,0 +1,63 @@
+# Card gate. Every push to main and every pull request:
+#   policy unit tests -> policy formatting -> every Card in the repo must be
+#   schema-valid and policy-clean.
+#
+# The third step is scripts/card-gate.sh, so what CI runs is exactly what you
+# can run locally with `./scripts/card-gate.sh`. It validates each Card against
+# the schema for its card_type first and only then evaluates the Rego, because
+# policies/agent_card.rego's rules assume schema-guaranteed fields and go
+# undefined rather than true without them.
+#
+# The gate uses `opa eval` rather than Conftest. The policy is a clean Conftest
+# fit -- package governance.agent_card with deny/warn sets -- but Conftest has
+# no first-party setup action to pin by commit SHA, and OPA is the same engine
+# under Conftest. Using it directly keeps the supply chain to actions that are
+# pinned below, at no loss of behaviour.
+#
+# `deny` fails the build; `warn` prints and does not.
+
+name: card-gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  OPA_VERSION: "1.19.1"
+  CHECK_JSONSCHEMA_VERSION: "0.38.2"
+
+jobs:
+  card-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: open-policy-agent/setup-opa@b2b258e089860efaadaaf71bf6e3aecb4a3eeff1 # v2.4.0
+        with:
+          version: ${{ env.OPA_VERSION }}
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.13"
+
+      - name: Install check-jsonschema (pinned)
+        run: pip install --disable-pip-version-check "check-jsonschema==${CHECK_JSONSCHEMA_VERSION}"
+
+      - name: Tool versions
+        run: |
+          opa version
+          check-jsonschema --version
+          jq --version
+
+      - name: Policy unit tests
+        run: opa test policies/ -v
+
+      - name: Policy formatting
+        run: opa fmt --list --fail policies/
+
+      - name: Every Card must be schema-valid and policy-clean
+        run: ./scripts/card-gate.sh
