@@ -109,7 +109,7 @@ governance-card-stack/
 ├── README.md                              # this file (the spec front door)
 ├── CONTRIBUTING.md                        # how to contribute, and the framework-text rule
 ├── LICENSE                                # Apache-2.0: schemas, policies, scripts, workflows
-├── LICENSE-CONTENT                        # CC BY 4.0: README, docs, example Cards
+├── LICENSES/CC-BY-4.0.txt                 # CC BY 4.0: README, docs, example Cards
 ├── schemas/
 │   ├── agent-card.schema.json             # v0.1.0 — JSON Schema (draft 2020-12)
 │   ├── system-card.schema.json            # stub — card_type: "system"
@@ -254,7 +254,7 @@ Two licenses, split by path.
 | Paths | License |
 |-------|---------|
 | `schemas/`, `policies/`, `scripts/`, `.github/` | [Apache-2.0](LICENSE) |
-| `README.md`, `CONTRIBUTING.md`, `docs/`, `examples/` | [CC BY 4.0](LICENSE-CONTENT) |
+| `README.md`, `CONTRIBUTING.md`, `docs/`, `examples/` | [CC BY 4.0](LICENSES/CC-BY-4.0.txt) |
 
 Anything not listed falls under Apache-2.0. Commits through v0.1.1 (`98fd0bb`) were published under MIT and stay available on those terms.
 

@@ -21,7 +21,7 @@ This repository carries two licenses, split by path.
 | Paths | License |
 |-------|---------|
 | `schemas/`, `policies/`, `scripts/`, `.github/` | Apache-2.0 ([LICENSE](LICENSE)) |
-| `README.md`, `CONTRIBUTING.md`, `docs/`, `examples/` | CC BY 4.0 ([LICENSE-CONTENT](LICENSE-CONTENT)) |
+| `README.md`, `CONTRIBUTING.md`, `docs/`, `examples/` | CC BY 4.0 ([LICENSE-CONTENT](LICENSES/CC-BY-4.0.txt)) |
 
 Anything not listed falls under Apache-2.0. By opening a pull request you agree that your contribution is licensed under the license that covers the path you changed.
 
