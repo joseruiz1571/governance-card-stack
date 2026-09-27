@@ -256,9 +256,15 @@
       "required": ["control_id", "framework", "status"],
       "additionalProperties": false,
       "properties": {
-        "control_id": { "type": "string" },
+        "control_id": {
+          "description": "The control or clause identifier as published by the framework (e.g. 'MANAGE 2.3', '8.3'). The identifier only, never the control text.",
+          "type": "string"
+        },
         "framework": { "type": "string" },
-        "statement": { "description": "How this agent satisfies the control.", "type": "string" },
+        "statement": {
+          "description": "How this agent satisfies the control, in the Card author's own words. Do not reproduce the framework's control text here; ISO/IEC standards in particular are copyrighted. See CONTRIBUTING.md.",
+          "type": "string"
+        },
         "status": { "type": "string", "enum": ["implemented", "partial", "planned", "not_applicable"] },
         "evidence_refs": {
           "description": "UUIDs of evidence[] items that substantiate this control.",
