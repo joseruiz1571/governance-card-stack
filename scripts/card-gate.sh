@@ -24,13 +24,18 @@
 # Run it locally exactly as CI does:
 #   ./scripts/card-gate.sh
 #
-# Requires: opa, check-jsonschema, jq.
+# Requires: opa, check-jsonschema, jq. Runs on bash 3.2 and newer, so the
+# bash that ships with macOS works; that is why the Cards are read with a
+# loop rather than `mapfile`, which needs bash 4.
 
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-mapfile -t cards < <(find . -name '*.card.json' -not -path './.git/*' | sort)
+cards=()
+while IFS= read -r card; do
+	cards+=("$card")
+done < <(find . -name '*.card.json' -not -path './.git/*' | sort)
 
 if [ "${#cards[@]}" -eq 0 ]; then
 	echo "FAIL: no *.card.json found in the repo — the gate has nothing to check."

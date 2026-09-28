@@ -2,7 +2,7 @@
 
 **Machine-readable governance for AI.** Model, System, and Agent Cards as a single, OSCAL-aligned spine — so an AI system's governance posture is *data* a pipeline can gate on, an auditor can query, and another system can consume. Governance that produces data, not documents.
 
-> Status: **v0.1.0 — draft.** This release ships the **Agent Card** schema and a worked example. Breaking changes expected until v1.0. Model Card and System Card schemas are next.
+> Status: **release v0.2.0, draft.** The Agent Card spec is at **0.1.0**: schema, worked example, and a CI gate. Breaking changes expected until v1.0. Model Card and System Card schemas are stubs. Changes by release: [CHANGELOG.md](CHANGELOG.md).
 
 ---
 
@@ -10,11 +10,11 @@
 
 Five minutes, using the sample Card that ships in `examples/`.
 
-**1. Get the tools.** The gate needs `opa`, `jq`, `check-jsonschema`, and bash 4 or newer.
+**1. Get the tools.** The gate needs `opa`, `jq`, and `check-jsonschema`. It runs on the bash that ships with macOS and Linux.
 
 ```bash
-# macOS (the system bash is 3.2, which cannot run the gate)
-brew install opa jq bash
+# macOS
+brew install opa jq
 pipx install check-jsonschema
 
 # Linux: install opa from openpolicyagent.org, then
@@ -107,6 +107,7 @@ The Agent Card ships first because it is the gap the field has not filled. Model
 ```
 governance-card-stack/
 ├── README.md                              # this file (the spec front door)
+├── CHANGELOG.md                           # what changed in each release
 ├── CONTRIBUTING.md                        # how to contribute, and the framework-text rule
 ├── LICENSE                                # Apache-2.0: schemas, policies, scripts, workflows
 ├── LICENSES/CC-BY-4.0.txt                 # CC BY 4.0: README, docs, example Cards
@@ -256,6 +257,6 @@ Two licenses, split by path.
 | `schemas/`, `policies/`, `scripts/`, `.github/` | [Apache-2.0](LICENSE) |
 | `README.md`, `CONTRIBUTING.md`, `docs/`, `examples/` | [CC BY 4.0](LICENSES/CC-BY-4.0.txt) |
 
-Anything not listed falls under Apache-2.0. Commits through v0.1.1 (`98fd0bb`) were published under MIT and stay available on those terms.
+Anything not listed falls under Apache-2.0. Releases v0.1.0 and v0.1.1 were published under MIT and stay available on those terms. v0.2.0 is the first release under the licenses above.
 
 Built by Jose Ruiz-Vazquez — *Controlled Vocabulary* (controlledvocabulary.substack.com). Building the data layer for AI governance.
