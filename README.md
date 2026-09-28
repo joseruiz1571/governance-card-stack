@@ -6,6 +6,76 @@
 
 ---
 
+## Quickstart
+
+Five minutes, using the sample Card that ships in `examples/`.
+
+**1. Get the tools.** The gate needs `opa`, `jq`, `check-jsonschema`, and bash 4 or newer.
+
+```bash
+# macOS (the system bash is 3.2, which cannot run the gate)
+brew install opa jq bash
+pipx install check-jsonschema
+
+# Linux: install opa from openpolicyagent.org, then
+sudo apt-get install -y jq
+pipx install check-jsonschema
+```
+
+**2. Clone and run the gate.**
+
+```bash
+git clone https://github.com/joseruiz1571/governance-card-stack.git
+cd governance-card-stack
+./scripts/card-gate.sh
+```
+
+The sample Card is valid and governed, so the gate passes:
+
+```
+Found 1 Card(s).
+────────────────────────────────────────────────────────────
+Card: examples/dispute-triage-agent.card.json
+  card_type: agent
+  schema:    schemas/agent-card.schema.json
+ok -- validation done
+  policy:    governance.agent_card
+  PASS: no denials.
+────────────────────────────────────────────────────────────
+Card gate passed: 1 Card(s) valid and current.
+```
+
+**3. Break a Card and watch the gate deny it.** Copy the sample and switch off its kill switch. The agent is high risk, so the policy refuses it.
+
+```bash
+jq '.escalation.kill_switch.available = false' \
+  examples/dispute-triage-agent.card.json > examples/broken.card.json
+./scripts/card-gate.sh
+```
+
+The gate now finds two Cards. The sample still passes, and the broken one is denied:
+
+```
+Card: examples/broken.card.json
+  card_type: agent
+  schema:    schemas/agent-card.schema.json
+ok -- validation done
+  policy:    governance.agent_card
+  DENY: HIGH/CRITICAL agents must declare an available kill switch (escalation.kill_switch.available = true).
+...
+Card gate FAILED — see DENY lines above.
+```
+
+The script exits 1, which is what fails a CI build. Clean up:
+
+```bash
+rm examples/broken.card.json
+```
+
+**4. Write your own.** Copy the sample to `examples/<your-agent>.card.json`, edit it, and run the gate again. Every identifier must be a v4 UUID (`uuidgen | tr 'A-Z' 'a-z'`). [docs/autonomy-levels.md](docs/autonomy-levels.md) defines the autonomy values.
+
+---
+
 ## Why this exists
 
 AI governance today produces documents. Model Cards as PDFs, risk assessments in wikis, control narratives in spreadsheets — artifacts no pipeline can read, no auditor can query, and no agent can consume. The information is real; the *format* is the problem.
@@ -37,6 +107,9 @@ The Agent Card ships first because it is the gap the field has not filled. Model
 ```
 governance-card-stack/
 ├── README.md                              # this file (the spec front door)
+├── CONTRIBUTING.md                        # how to contribute, and the framework-text rule
+├── LICENSE                                # Apache-2.0: schemas, policies, scripts, workflows
+├── LICENSES/CC-BY-4.0.txt                 # CC BY 4.0: README, docs, example Cards
 ├── schemas/
 │   ├── agent-card.schema.json             # v0.1.0 — JSON Schema (draft 2020-12)
 │   ├── system-card.schema.json            # stub — card_type: "system"
@@ -94,6 +167,10 @@ A Card is what you get when an inventory entry and an evidence bundle are joined
 - **Crosswalk-native.** Threats (MITRE ATLAS / OWASP) and controls (NIST AI RMF / ISO 42001 / SR 11-7) are first-class and cross-referenced. The crosswalk *is* the governance.
 - **Evidence-linked and signable.** Cards reference signed evidence and can be signed themselves (canonicalize with RFC 8785 JCS, then sign — keyless Cosign works well).
 - **Versioned.** `spec_version` on every Card; the schema is versioned in its `$id`.
+
+### Framework references: identifiers and your own words
+
+ISO/IEC 42001 is copyrighted, and this repository reproduces none of its text. A control mapping carries the framework name, the control or clause identifier in `control_id`, and the Card author's own commentary in `statement`. The commentary describes how the agent meets the control. It never restates the control. The same rule covers every other framework that does not allow redistribution. Details in [CONTRIBUTING.md](CONTRIBUTING.md#referencing-frameworks-ids-and-your-own-words).
 
 ---
 
@@ -164,6 +241,21 @@ setup action to pin by commit SHA, and OPA is the same engine underneath.
 
 ---
 
+## Maintenance posture
+
+Single maintainer, best-effort. Issues and pull requests are read; response time is not guaranteed.
+
+---
+
 ## License & author
 
-MIT. Built by Jose Ruiz-Vazquez — *Controlled Vocabulary* (controlledvocabulary.substack.com). Building the data layer for AI governance.
+Two licenses, split by path.
+
+| Paths | License |
+|-------|---------|
+| `schemas/`, `policies/`, `scripts/`, `.github/` | [Apache-2.0](LICENSE) |
+| `README.md`, `CONTRIBUTING.md`, `docs/`, `examples/` | [CC BY 4.0](LICENSES/CC-BY-4.0.txt) |
+
+Anything not listed falls under Apache-2.0. Commits through v0.1.1 (`98fd0bb`) were published under MIT and stay available on those terms.
+
+Built by Jose Ruiz-Vazquez — *Controlled Vocabulary* (controlledvocabulary.substack.com). Building the data layer for AI governance.
