@@ -1,6 +1,6 @@
 # Governance Card Stack
 
-**Machine-readable governance for AI.** Model, System, and Agent Cards as a single, OSCAL-aligned spine — so an AI system's governance posture is *data* a pipeline can gate on, an auditor can query, and another system can consume. Governance that produces data, not documents.
+**Machine-readable governance for AI.** Model, System, and Agent Cards on one OSCAL spine — so posture is *data* a pipeline can gate on, an auditor can query, and another system can consume. Governance that produces data, not documents.
 
 > Status: **release v0.2.0, draft.** The Agent Card spec is at **0.1.0**: schema, worked example, and a CI gate. Breaking changes expected until v1.0. Model Card and System Card schemas are stubs. Changes by release: [CHANGELOG.md](CHANGELOG.md).
 
@@ -152,12 +152,15 @@ This **Governance Agent Card is an assurance descriptor** — what the agent is 
 
 ## How it connects to the rest of the work
 
-The Card Stack is the spine where two existing projects converge:
+The Card Stack is the spine between inventory and assurance. The order is inventory, then this spine, then signed custody and assessment:
 
-- **[mltrack](https://github.com/joseruiz1571/mltrack)** is the **inventory / data layer** — it discovers and tracks governed models and (next) generates and validates Cards via a `card` export command. The Card schema is the format mltrack emits.
-- **[cgep-capstone](https://github.com/joseruiz1571/cgep-capstone)** is the **evidence layer** — its CI pipeline produces Cosign-signed, Object-Lock-retained evidence bundles. A Card's `evidence[]` entries point at exactly those bundles.
+- **[mltrack](https://github.com/joseruiz1571/mltrack)** is the **inventory**. It discovers and tracks governed models against NIST AI RMF, ISO 42001, and SR 11-7, and (next) generates and validates Cards via a `card` export command. The Card schema is the format that export emits.
+- **[Colophon](https://github.com/joseruiz1571/colophon)** is **signed agent session custody**. It signs a session packet for agent tool use that a stranger can verify.
+- **[mlassure](https://github.com/joseruiz1571/mlassure)** is **assurance**. It runs citation-invariant assessment: a verdict that cites evidence the run never retrieved fails the run.
 
-A Card is what you get when an inventory entry and an evidence bundle are joined by a stable identifier.
+mltrack names what is governed. A Card states the posture. Colophon keeps the signed session. mlassure assesses it.
+
+**[cgep-capstone](https://github.com/joseruiz1571/cgep-capstone)** is related prior work: compliance-as-code, and a signed evidence vault whose CI pipeline produces Cosign-signed, Object-Lock-retained bundles. A Card's `evidence[]` entries can point at those bundles.
 
 ---
 
@@ -259,4 +262,4 @@ Two licenses, split by path.
 
 Anything not listed falls under Apache-2.0. Releases v0.1.0 and v0.1.1 were published under MIT and stay available on those terms. v0.2.0 is the first release under the licenses above.
 
-Built by Jose Ruiz-Vazquez — *Controlled Vocabulary* (controlledvocabulary.substack.com). Building the data layer for AI governance.
+Built by Jose Ruiz-Vazquez — *Controlled Vocabulary* (controlledvocabulary.substack.com). Evidence and assurance for agent governance: Model, System, and Agent Cards on one OSCAL spine, so posture is data a pipeline can gate on.
