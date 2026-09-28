@@ -47,6 +47,10 @@ governance-card-stack/
 ├── policies/
 │   ├── agent_card.rego                    # OPA/Conftest CI gate — governance lint (run after schema validation)
 │   └── agent_card_test.rego               # unit tests — `opa test policies/ -v`
+├── scripts/
+│   └── card-gate.sh                       # the gate: schema, then policy, over every Card
+├── .github/workflows/
+│   └── card-gate.yml                      # runs the gate on every push and pull request
 └── docs/
     └── autonomy-levels.md                 # normative reference for autonomy_level / human_oversight / reversibility
 ```
@@ -107,6 +111,33 @@ npx ajv-cli validate -s schemas/agent-card.schema.json -d "examples/*.card.json"
 ```
 
 Note the v4-UUID constraint on identifiers, mirroring OSCAL — hand-written all-zero UUIDs will fail, by design.
+
+### The CI gate
+
+Schema validation answers *is this well-formed*. The Rego policy in `policies/`
+answers *is this governed* — staleness, risk-tier obligations, dangling threats,
+autonomy coherence. `scripts/card-gate.sh` runs both, in that order, over every
+`*.card.json` in the repo:
+
+```bash
+./scripts/card-gate.sh          # needs opa, check-jsonschema, jq
+```
+
+The ordering is load-bearing, not stylistic. The policy's rules assume the
+schema has already guaranteed that `classification` and `risk_tier` exist and
+are well-typed; on an unvalidated card those rules go *undefined* rather than
+true, so the gate would pass a malformed Card. A schema failure therefore stops
+that Card before the policy runs.
+
+`.github/workflows/card-gate.yml` runs the same script on every push to `main`
+and every pull request, after `opa test policies/ -v` and an `opa fmt` check.
+`deny` fails the build; `warn` prints and does not. The gate also fails when it
+finds no Cards at all — a gate that passes on an empty set is not a gate.
+
+The workflow calls `opa eval` rather than Conftest. The policy is a clean
+Conftest fit and `conftest test examples/*.card.json --policy policies/
+--all-namespaces` gives identical results, but Conftest has no first-party
+setup action to pin by commit SHA, and OPA is the same engine underneath.
 
 ---
 

@@ -138,7 +138,7 @@ deny contains msg if {
 warn contains msg if {
 	due := time.parse_ns("2006-01-02", input.classification.next_review)
 	due >= time.now_ns()
-	due < time.now_ns() + ((14 * 24 * 60 * 60) * 1000000000)
+	due < time.now_ns() + ((((14 * 24) * 60) * 60) * 1000000000)
 	msg := sprintf("Agent Card review is due within 14 days (next_review %v).", [input.classification.next_review])
 }
 
