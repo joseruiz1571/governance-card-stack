@@ -2,7 +2,7 @@
 
 **Machine-readable governance for AI.** Model, System, and Agent Cards on one OSCAL spine — so posture is *data* a pipeline can gate on, an auditor can query, and another system can consume. Governance that produces data, not documents.
 
-> Status: **release v0.2.0, draft.** The Agent Card spec is at **0.1.0**: schema, worked example, and a CI gate. Breaking changes expected until v1.0. Model Card and System Card schemas are stubs. Changes by release: [CHANGELOG.md](CHANGELOG.md).
+> Status: **v0.2.0. The Agent Card is complete and the project is paused.** The Agent Card spec is at **0.1.0**: schema, worked example, and a CI gate. That part is finished and gets bug fixes only. The Model Card and System Card schemas are stubs with no work scheduled. Breaking changes remain possible before v1.0. Changes by release: [CHANGELOG.md](CHANGELOG.md).
 
 ---
 
@@ -225,12 +225,12 @@ setup action to pin by commit SHA, and OPA is the same engine underneath.
 ## Roadmap
 
 - [x] **v0.1.0** — Agent Card schema + worked example
-- [ ] Extract `card-base.schema.json` (shared `metadata` / `governance` / `evidence` defs) and `$ref` it from all three cards
-- [x] **Model Card** and **System Card** schemas (stubs — full field expansion follows the `card-base` extraction)
-- [ ] `mltrack card export` / `mltrack card validate` — generate and check Cards from the inventory
+- [ ] *Unscheduled:* extract `card-base.schema.json` (shared `metadata` / `governance` / `evidence` defs) and `$ref` it from all three cards
+- [x] **Model Card** and **System Card** schemas (stubs; full field expansion would follow the `card-base` extraction and is unscheduled)
+- [ ] *Dropped:* `mltrack card export` / `mltrack card validate`. mltrack is feature-complete and takes bug fixes only.
 - [x] A Conftest/OPA policy that fails a CI build when a changed agent ships without a valid, current Card (ties the stack to the capstone gate)
 - [x] `docs/autonomy-levels.md` — the autonomy scale, with worked examples per level
-- [ ] Publish the spec at a stable URL and invite a first external adopter
+- [ ] *Unscheduled:* publish the spec at a stable URL and invite a first external adopter
 
 ---
 
