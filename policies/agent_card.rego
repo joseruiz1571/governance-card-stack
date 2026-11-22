@@ -41,6 +41,16 @@ has_autonomy_exception if {
 	p.name == "autonomy-exception"
 }
 
+# What a reference may point at. UUIDs are compared in lower case because the
+# schema accepts either case.
+evidence_uuids contains lower(e.uuid) if some e in object.get(input, "evidence", [])
+
+mitigation_ids contains c.control_id if some c in input.governance.control_mappings
+
+mitigation_ids contains b.id if some b in object.get(input, "decision_boundaries", [])
+
+threat_ids contains t.threat_id if some t in object.get(input.governance, "threat_mappings", [])
+
 # ---- deny (fails the build) ----
 
 deny contains msg if {
@@ -102,6 +112,30 @@ deny contains msg if {
 	c.status == "implemented"
 	count(object.get(c, "evidence_refs", [])) == 0
 	msg := sprintf("Control %v (%v) claims 'implemented' but cites no evidence_refs.", [c.control_id, c.framework])
+}
+
+# Every reference must resolve. A count above zero only shows that something
+# was written in the field; these three rules check that it names a real thing.
+# Without them a Card can cite evidence that is not there and still pass.
+deny contains msg if {
+	some c in input.governance.control_mappings
+	some ref in object.get(c, "evidence_refs", [])
+	not evidence_uuids[lower(ref)]
+	msg := sprintf("Control %v (%v) cites evidence_ref '%v', which matches no evidence[] item.", [c.control_id, c.framework, ref])
+}
+
+deny contains msg if {
+	some t in object.get(input.governance, "threat_mappings", [])
+	some m in object.get(t, "mitigated_by", [])
+	not mitigation_ids[m]
+	msg := sprintf("Threat '%v' (%v) lists mitigation '%v', which matches no control_id or decision_boundary id.", [t.threat_id, t.taxonomy, m])
+}
+
+deny contains msg if {
+	some tool in object.get(input, "tools", [])
+	some ref in object.get(tool, "threat_refs", [])
+	not threat_ids[ref]
+	msg := sprintf("Tool '%v' lists threat_ref '%v', which matches no threat_mappings entry.", [tool.tool_id, ref])
 }
 
 # Irreversible write tools must require approval.
