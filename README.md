@@ -3,6 +3,8 @@
 **Machine-readable governance for AI.** Model, System, and Agent Cards on one OSCAL spine — so posture is *data* a pipeline can gate on, an auditor can query, and another system can consume. Governance that produces data, not documents.
 
 > Status: **v0.2.0. The Agent Card is complete and the project is paused.** The Agent Card spec is at **0.1.0**: schema, worked example, and a CI gate. That part is finished and gets bug fixes only. The Model Card and System Card schemas are stubs with no work scheduled. Breaking changes remain possible before v1.0. Changes by release: [CHANGELOG.md](CHANGELOG.md).
+>
+> The sample Card's `next_review` is set to 2027-12-31 so the quickstart keeps passing while the project is paused. After that date the gate denies the sample as stale, which is the staleness rule working. Move the date forward to run the quickstart again.
 
 ---
 
@@ -154,7 +156,7 @@ This **Governance Agent Card is an assurance descriptor** — what the agent is 
 
 The Card Stack is the spine between inventory and assurance. The order is inventory, then this spine, then signed custody and assessment:
 
-- **[mltrack](https://github.com/joseruiz1571/mltrack)** is the **inventory**. It discovers and tracks governed models against NIST AI RMF, ISO 42001, and SR 11-7, and (next) generates and validates Cards via a `card` export command. The Card schema is the format that export emits.
+- **[mltrack](https://github.com/joseruiz1571/mltrack)** is the **inventory**. It discovers and tracks governed models against NIST AI RMF, ISO 42001, and SR 11-7, and writes and validates Model Cards with `mltrack card export` and `mltrack card validate` (shipped in mltrack v0.1.0). The Model Card schema here is the format that export emits.
 - **[Colophon](https://github.com/joseruiz1571/colophon)** is **signed agent session custody**. It signs a session packet for agent tool use that a stranger can verify.
 - **[mlassure](https://github.com/joseruiz1571/mlassure)** is **assurance**. It runs citation-invariant assessment: a verdict that cites evidence the run never retrieved fails the run.
 
@@ -227,7 +229,7 @@ setup action to pin by commit SHA, and OPA is the same engine underneath.
 - [x] **v0.1.0** — Agent Card schema + worked example
 - [ ] *Unscheduled:* extract `card-base.schema.json` (shared `metadata` / `governance` / `evidence` defs) and `$ref` it from all three cards
 - [x] **Model Card** and **System Card** schemas (stubs; full field expansion would follow the `card-base` extraction and is unscheduled)
-- [ ] *Dropped:* `mltrack card export` / `mltrack card validate`. mltrack is feature-complete and takes bug fixes only.
+- [x] `mltrack card export` / `mltrack card validate` for the Model Card schema, shipped in mltrack v0.1.0. System and Agent Card export from mltrack are not planned.
 - [x] A Conftest/OPA policy that fails a CI build when a changed agent ships without a valid, current Card (ties the stack to the capstone gate)
 - [x] `docs/autonomy-levels.md` — the autonomy scale, with worked examples per level
 - [ ] *Unscheduled:* publish the spec at a stable URL and invite a first external adopter

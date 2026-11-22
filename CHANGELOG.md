@@ -2,6 +2,13 @@
 
 Release versions number the repository. The Agent Card spec carries its own version in `spec_version`, which is `0.1.0` in every release below.
 
+## Unreleased
+
+### Changed
+
+- The sample Card's `next_review` moved to 2027-12-31 so the quickstart keeps passing while the project is paused. The README status line says what happens after that date.
+- README: `mltrack card export` and `mltrack card validate` are marked shipped (mltrack v0.1.0). An earlier edit had listed them as dropped.
+
 ## v0.2.0 (2026-09-28)
 
 ### Changed
