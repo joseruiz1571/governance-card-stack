@@ -4,6 +4,10 @@ Release versions number the repository. The Agent Card spec carries its own vers
 
 ## Unreleased
 
+### Fixed
+
+- **The gate now checks that references resolve.** A control could cite an `evidence_refs` UUID that matched no `evidence[]` item and still pass, because the policy only counted the entries. The same was true of a threat's `mitigated_by` and a tool's `threat_refs`. All three now deny when an entry names nothing. UUIDs match without regard to case.
+
 ### Changed
 
 - The sample Card's `next_review` moved to 2027-12-31 so the quickstart keeps passing while the project is paused. The README status line says what happens after that date.
