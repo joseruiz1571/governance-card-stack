@@ -8,6 +8,7 @@ Release versions number the repository. The Agent Card spec carries its own vers
 
 - **Claimed versus verified (Agent Card spec 0.2.0).** An evidence item can declare a `basis`: `attestation`, `inspection`, or `test`. The gate warns when an `implemented` control cites no evidence with basis `inspection` or `test`, and treats an item with no `basis` as attestation. The Card carries no `verified` field; the gate derives it. The README section of the same name gives the reason, with the November 2026 zero data retention findings as the worked case, and says what `basis` does not prove.
 - The gate accepts `spec_version` `0.1.0` and `0.2.0`. The change is additive, so a 0.1.0 Card stays valid. The sample Card moves to 0.2.0 and its evidence item declares `basis: test`.
+- README status line: the project stays paused with no work scheduled. It no longer says the Agent Card gets bug fixes only, since 0.2.0 added a field.
 
 ### Fixed
 
