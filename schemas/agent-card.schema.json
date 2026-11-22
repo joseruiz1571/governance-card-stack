@@ -301,6 +301,11 @@
         "href": { "type": "string" },
         "media_type": { "type": "string" },
         "collected_at": { "$ref": "#/$defs/timestamp" },
+        "basis": {
+          "description": "How this artifact supports the control it is cited for. attestation: a party states the control is in place (a policy, a vendor letter, a contract clause, a configuration flag). inspection: someone examined a record or configuration and recorded what they found. test: the behavior was exercised and the result observed. The gate uses this to tell a claimed control from a verified one; an item with no basis is treated as attestation. Added in spec 0.2.0.",
+          "type": "string",
+          "enum": ["attestation", "inspection", "test"]
+        },
         "hash": {
           "type": "object",
           "required": ["algorithm", "value"],

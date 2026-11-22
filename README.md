@@ -2,7 +2,7 @@
 
 **Machine-readable governance for AI.** Model, System, and Agent Cards on one OSCAL spine — so posture is *data* a pipeline can gate on, an auditor can query, and another system can consume. Governance that produces data, not documents.
 
-> Status: **v0.2.0. The Agent Card is complete and the project is paused.** The Agent Card spec is at **0.1.0**: schema, worked example, and a CI gate. That part is finished and gets bug fixes only. The Model Card and System Card schemas are stubs with no work scheduled. Breaking changes remain possible before v1.0. Changes by release: [CHANGELOG.md](CHANGELOG.md).
+> Status: **v0.2.0. The Agent Card is complete and the project is paused.** The Agent Card spec is at **0.2.0**: schema, worked example, and a CI gate. Spec 0.2.0 added one field, `basis`, in November 2026, and nothing further is scheduled. The Model Card and System Card schemas are stubs with no work scheduled. Breaking changes remain possible before v1.0. Changes by release: [CHANGELOG.md](CHANGELOG.md).
 >
 > The sample Card's `next_review` is set to 2027-12-31 so the quickstart keeps passing while the project is paused. After that date the gate denies the sample as stale, which is the staleness rule working. Move the date forward to run the quickstart again.
 
@@ -98,7 +98,7 @@ Three claims hold the stack together:
 |------|-----------|--------|
 | **Model Card** | What a model *is*: purpose, training, performance, limitations, evaluations. | stub |
 | **System Card** | The system *around* a model: data pipeline, deployment context, safeguards, human roles. | stub |
-| **Agent Card** | What an agent is *allowed to do*: autonomy, tool/permission scope, decision boundaries, oversight, and the controls + evidence that back them. | **v0.1.0** |
+| **Agent Card** | What an agent is *allowed to do*: autonomy, tool/permission scope, decision boundaries, oversight, and the controls + evidence that back them. | **v0.2.0** |
 
 The Agent Card ships first because it is the gap the field has not filled. Model Cards are well-established (Mitchell et al., 2019); System Cards less so; a *governance* Agent Card — an authority record for an autonomous system — barely exists yet.
 
@@ -114,7 +114,7 @@ governance-card-stack/
 ├── LICENSE                                # Apache-2.0: schemas, policies, scripts, workflows
 ├── LICENSES/CC-BY-4.0.txt                 # CC BY 4.0: README, docs, example Cards
 ├── schemas/
-│   ├── agent-card.schema.json             # v0.1.0 — JSON Schema (draft 2020-12)
+│   ├── agent-card.schema.json             # v0.2.0 — JSON Schema (draft 2020-12)
 │   ├── system-card.schema.json            # stub — card_type: "system"
 │   ├── model-card.schema.json             # stub — card_type: "model"
 │   └── card-base.schema.json              # planned — shared metadata/governance/evidence defs
@@ -143,6 +143,42 @@ An **Agent Card is an authority record for an autonomous system**: a stable, ver
 - **Escalation** — the conditions that hand control back to a human, the target, the SLA, and the kill switch.
 - **Governance spine** — control mappings (NIST AI RMF, ISO 42001, SR 11-7, …) and threat mappings (MITRE ATLAS, OWASP LLM Top 10), each cross-referenced to the other.
 - **Evidence** — signed, hashed, retained artifacts the assertions resolve to.
+
+### Claimed versus verified
+
+A control marked `implemented` is a claim. The evidence it cites is what the claim rests on, and a signed, hashed copy of somebody's statement is still a statement. So each evidence item can declare its `basis`:
+
+| `basis` | What the artifact records | For a zero data retention control |
+|---------|---------------------------|-----------------------------------|
+| `attestation` | A party states the control is in place | The provider marks its endpoint as zero data retention |
+| `inspection` | Someone examined a record or configuration | A reviewer reads the provider's retention settings |
+| `test` | The behavior was exercised and the result observed | A prompt carrying a canary token is sent, and the token is never used |
+
+The Card has no `verified` field, on purpose. A Card that says "verified" about itself has only made a second claim. The gate works the answer out: an `implemented` control is verified when at least one evidence item it cites has basis `inspection` or `test`. Otherwise the gate prints a warning. Evidence with no `basis` draws the same warning, so leaving the field out is never the easier path.
+
+Try it on the sample Card:
+
+```bash
+jq '.evidence[0].basis = "attestation"' \
+  examples/dispute-triage-agent.card.json > examples/claimed.card.json
+./scripts/card-gate.sh
+rm examples/claimed.card.json
+```
+
+```
+Card: examples/claimed.card.json
+  ...
+  warn: Control MANAGE 2.3 (NIST AI RMF 1.0) is claimed, not verified: none of its evidence has basis 'inspection' or 'test'.
+  warn: Control MAP 1.1 (NIST AI RMF 1.0) is claimed, not verified: none of its evidence has basis 'inspection' or 'test'.
+  warn: Control Ongoing Monitoring (Federal Reserve SR 11-7) is claimed, not verified: none of its evidence has basis 'inspection' or 'test'.
+  PASS: no denials.
+```
+
+It is a warning and not a denial, so Cards written to spec 0.1.0 keep passing.
+
+**Why this exists.** On 2026-11-19 Dragos published the results of sending about two million prompts seeded with canary tokens through AI routers and inference providers over five months ([Dragos](https://www.dragos.com/blog/ai-supply-chain-security-canary-tokens)). Customers could mark a request for no data collection or zero data retention, and the researchers report that "providers often ignore these settings." Three days later OpenRouter said it had off-boarded three providers, removed 125 endpoints from zero data retention eligibility, and started adapting the researchers' tests to run on an ongoing basis ([OpenRouter](https://openrouter.ai/blog/announcements/data-processing-incidents-on-inference-providers/)). Neither post says what the label rested on before. What the record does show is that a test found what the label had not.
+
+**What `basis` does not prove.** The Card author declares it, so it is a claim too. It is a narrower one: it points at a single artifact with a hash and a signature, which a reviewer can open and check. It does not say who ran a test, and it does not keep a result fresh. `collected_at` dates the artifact, and a test from last year is evidence about last year.
 
 ### Not the same as an A2A Agent Card
 

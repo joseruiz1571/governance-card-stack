@@ -157,3 +157,64 @@ test_unresolved_threat_ref_denied if {
 	some m in deny with input as card
 	contains(m, "matches no threat_mappings entry")
 }
+
+# ---- claimed versus verified (spec 0.2.0) ----
+
+# The resolving Card at spec 0.2.0, with its one evidence item given a basis.
+card_with_basis(basis) := json.patch(resolving_card, [
+	{"op": "replace", "path": "/spec_version", "value": "0.2.0"},
+	{"op": "add", "path": "/evidence/0/basis", "value": basis},
+])
+
+# A control backed by a test is verified: no warning.
+test_tested_control_not_warned if {
+	every m in warn {
+		not contains(m, "claimed, not verified")
+	}
+		with input as card_with_basis("test")
+}
+
+# So is a control backed by an inspection.
+test_inspected_control_not_warned if {
+	every m in warn {
+		not contains(m, "claimed, not verified")
+	}
+		with input as card_with_basis("inspection")
+}
+
+# A control whose only evidence is somebody's statement is claimed, not verified.
+test_attested_control_warned if {
+	some m in warn with input as card_with_basis("attestation")
+	contains(m, "claimed, not verified")
+}
+
+# Evidence that declares no basis gets the same warning, so leaving the field
+# out is never the easier path.
+test_undeclared_basis_warned if {
+	some m in warn with input as resolving_card
+	contains(m, "claimed, not verified")
+}
+
+# The warning never fails the build.
+test_attested_control_not_denied if {
+	count(deny) == 0 with input as card_with_basis("attestation")
+}
+
+# One verifying item is enough when a control cites several.
+test_mixed_evidence_not_warned if {
+	card := json.patch(card_with_basis("attestation"), [
+		{"op": "add", "path": "/evidence/-", "value": {
+			"uuid": "0d9f4c11-5b7a-4e62-8a3c-9f1e2d3c4b5a",
+			"description": "t",
+			"href": "s3://y",
+			"collected_at": "2026-01-01T00:00:00Z",
+			"retention_until": "2027-01-01T00:00:00Z",
+			"basis": "test",
+		}},
+		{"op": "add", "path": "/governance/control_mappings/0/evidence_refs/-", "value": "0d9f4c11-5b7a-4e62-8a3c-9f1e2d3c4b5a"},
+	])
+	every m in warn {
+		not contains(m, "claimed, not verified")
+	}
+		with input as card
+}

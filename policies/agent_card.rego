@@ -23,7 +23,10 @@ package governance.agent_card
 import rego.v1
 
 high_risk := {"critical", "high"}
-supported_versions := {"0.1.0"}
+supported_versions := {"0.1.0", "0.2.0"}
+
+# Evidence that shows a control was checked, as opposed to stated.
+verifying_basis := {"inspection", "test"}
 high_autonomy := {"autonomous", "autonomous_bounded"}
 low_autonomy := {"assistive", "supervised"}
 
@@ -35,6 +38,16 @@ spec_supported if input.spec_version in supported_versions
 kill_switch_available if input.escalation.kill_switch.available == true
 
 tool_requires_approval(t) if t.requires_approval == true
+
+# A control is verified when at least one evidence item it cites was produced
+# by inspection or by test. The Card never says "verified" itself; the gate
+# works it out from the evidence, so the answer cannot be typed in.
+control_is_verified(c) if {
+	some ref in object.get(c, "evidence_refs", [])
+	some e in object.get(input, "evidence", [])
+	lower(e.uuid) == lower(ref)
+	object.get(e, "basis", "undeclared") in verifying_basis
+}
 
 has_autonomy_exception if {
 	some p in object.get(input, "props", [])
@@ -168,6 +181,18 @@ deny contains msg if {
 }
 
 # ---- warn (prints, does not fail) ----
+
+# Claimed versus verified. An 'implemented' control whose evidence is all
+# attestation, or declares no basis, rests on somebody's word. Evidence with no
+# basis is treated the same as attestation so that omitting the field is never
+# the easier path. A warning, so Cards written to spec 0.1.0 keep passing.
+warn contains msg if {
+	some c in input.governance.control_mappings
+	c.status == "implemented"
+	count(object.get(c, "evidence_refs", [])) > 0
+	not control_is_verified(c)
+	msg := sprintf("Control %v (%v) is claimed, not verified: none of its evidence has basis 'inspection' or 'test'.", [c.control_id, c.framework])
+}
 
 warn contains msg if {
 	due := time.parse_ns("2006-01-02", input.classification.next_review)

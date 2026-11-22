@@ -1,5 +1,5 @@
 {
-  "spec_version": "0.1.0",
+  "spec_version": "0.2.0",
   "card_type": "agent",
   "metadata": {
     "uuid": "a1f5c2d4-9b3e-4c7a-8e21-6d884bb7b280",
@@ -182,6 +182,7 @@
       "href": "s3://acme-evidence-vault/agents/dispute-triage/runs/142/evidence-bundle.tar.gz",
       "media_type": "application/x-tar",
       "collected_at": "2026-06-02T09:14:50Z",
+      "basis": "test",
       "hash": {
         "algorithm": "sha-256",
         "value": "9f2c1a7d4e6b8c0a3f5d2e1b7c9a0d4f6e8b2c1a3d5f7e9b0c2a4d6f8e1b3c5d"
