@@ -2,7 +2,7 @@
 
 **Machine-readable governance for AI.** Model, System, and Agent Cards on one OSCAL spine — so posture is *data* a pipeline can gate on, an auditor can query, and another system can consume. Governance that produces data, not documents.
 
-> Status: **v0.2.0. The Agent Card is complete and the project is paused.** The Agent Card spec is at **0.2.0**: schema, worked example, and a CI gate. The project is paused, with no work scheduled. Spec 0.2.0 added one field, `basis`, in November 2026. The Model Card and System Card schemas are stubs with no work scheduled. Breaking changes remain possible before v1.0. Changes by release: [CHANGELOG.md](CHANGELOG.md).
+> Status: **v0.2.0. The Agent Card is complete and the project is paused.** The Agent Card spec is at **0.2.0**: schema, worked example, and a CI gate. Spec 0.2.0 added one field, `basis`, in November 2026, and nothing further is scheduled. The Model Card and System Card schemas are stubs with no work scheduled. Breaking changes remain possible before v1.0. Changes by release: [CHANGELOG.md](CHANGELOG.md).
 >
 > The sample Card's `next_review` is set to 2027-12-31 so the quickstart keeps passing while the project is paused. After that date the gate denies the sample as stale, which is the staleness rule working. Move the date forward to run the quickstart again.
 
